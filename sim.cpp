@@ -1,41 +1,50 @@
+/*
+TODO
+- Add docstrings
+
+
+*/
 #include<iostream>
 #include<cmath>
 #include<vector>
 #include<fstream>
 
 // Define our constants
-float wellLength = 0.1; //[m]
-float wellDepth = 0.5; // [kelvin]
-
-float bumpAmp = 0.01; // [kelvin]
-float bumpLength = 0.01; //[m]
-float bumpPos = (wellLength/2) - (bumpLength/2); //[m] //places bump in middle
-// this will need to be varied
-float bumpOmega = 0; // [rad/s] //driving frequency of potential 'bump'
-float bumpPhase = 0; //[rads]
-
-float v_0 = 0.02; //[m/s] //a few cm a second seems about right
+float v_0 = 0.05; //[m/s] //a few cm a second seems about right
 float M = 1.00784*1.66*pow(10,-27); //[kg] //using atomic mass of H
 float x_0 = 0; //[m] //particle starts at far left side 
 
-float timeStep = 0.1; //[s]
+float wellLength = 0.27; //[m]
+float wellDepth = 0.5; // [kelvin]
+
+float bumpAmp = 0.0000001; // [kelvin]
+float bumpLength = 0.05; //[m]
+float bumpPos = (wellLength/2) - (bumpLength/2); //[m] //places bump in middle
+float bumpOmega = M_PI*v_0/bumpLength; // [rad/s] //driving frequency of potential 'bump'
+float bumpPhase = M_PI; //[rads]
+
+float timeStep = 0.01; //[s]
 float stopTime = 10; //[s] //Overall Length of sim
 
-// useful functions
-float KEConv(float v, float M)
+// USEFUL FUNCTIONS
+float KEConv(float v)
 {
+    //
     return 0.5*M*pow(v,2);
 };
-float velConv(float KE, float M)
+float velConv(float KE)
 {
+    //
     return pow((2*KE)/M, 0.5);
 };
 float eVConv(float KE)
 {
+    //
     return KE/(1.6*pow(10,-19));
 }
 float KelEConv(float K)
 {
+    //
     return 1.380649*pow(10, -23)*K;
 }
 float BumpPotential(float x, float time)
@@ -45,9 +54,9 @@ float BumpPotential(float x, float time)
     // designed to take raw x value, auto offsets by the bump position
     return KelEConv(bumpAmp) * std::sin((M_PI/bumpLength)*(x-bumpPos) + (bumpOmega*time) + bumpPhase);
 }
-
 float GetPotential(float x, float time)
 {
+    //
     // check if over bump
     if (x > bumpPos && x < bumpPos + bumpLength)
     {
@@ -60,18 +69,19 @@ float GetPotential(float x, float time)
     }
 }
 
+// MAIN
 int main()
 {
     float time = 0;
     float x = x_0;
     float v = v_0;
-    float KE = KEConv(v_0,M); // init KE [j]
+    float KE = KEConv(v_0); // init KE [j]
     float ET = KE + GetPotential(x,time); //[J] Get E_total at x_0 and time=0
 
     //open file write our initials 
     std::ofstream result;
     result.open("results.dat");
-    result<<time<<','<<eVConv(KE)<<'\n';
+    result<<time<<','<<KE<<'\n';
 
     while(time < stopTime)
     {   
@@ -89,10 +99,12 @@ int main()
         }
         // work out new KE and export result
         KE = ET - GetPotential(x,time);
-        result<<time<<','<<eVConv(KE)<<'\n';
+        result<<time<<','<<KE<<'\n';
 
+        // update velocity and time
+        v = velConv(KE);
         time += timeStep;
-        std::cout<<x<<','<<time<<'\n';
+        std::cout<<x<<','<<v<<','<<time<<'\n';
     };
 
     result.close();
