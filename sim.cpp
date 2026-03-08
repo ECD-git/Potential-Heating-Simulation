@@ -1,3 +1,8 @@
+/*
+TODO:
+    - convert bump potential to a force
+*/
+
 #include<iostream>
 #include<cmath>
 #include<vector>
@@ -10,69 +15,95 @@ float x_0 = 0; //[m] //particle starts at far left side
 // well definitions 
 float wellLength = 0.25; //[m]
 float wellDepth = 0.5; // [kelvin]
-// bump constraints
+// bump consts
 float bumpAmp = 0.0000001; // [kelvin]
 float bumpLength = 0.05; //[m]
 float bumpPos = (wellLength/2) - (bumpLength/2); //[m] //places bump in middle
 float bumpOmega = 0.5*(M_PI*v_0/wellLength); // [rad/s] //driving frequency of potential 'bump'
 float bumpPhase = M_PI; //[rads]
+// Spring Potential Consts
+float springK = 0.01; // [N/m]  
 // time step and sim length
 float timeStep = 0.01; //[s]
-float stopTime = 20; //[s] //Overall Length of sim
+float stopTime = 20; //[s] //Overall Length of sim (will be rounded if not divisible)
+int N_t = std::round(stopTime/timeStep); // number of time steps
 
 // USEFUL FUNCTIONS
-float KEConv(float v)
+float KE_Conv(float v)
 {
     // converts a velocity in [m/s] to a kinetic energy [J]
     return 0.5*M*pow(v,2);
 };
-float velConv(float KE)
+float Vel_Conv(float KE)
 {
     // converts a KE [J] to a velocity [m/s]
     return pow((2*KE)/M, 0.5);
 };
-float eVConv(float KE)
+float eV_Conv(float KE)
 {
     // Converts an energy [J] to an energy [eV]
     return KE/(1.6*pow(10,-19));
 }
-float KelEConv(float K)
+float Kel_E_Conv(float K)
 {
     // converts a temperature [K] to an energy [J]
     return 1.380649*pow(10, -23)*K;
 }
-float BumpPotential(float x, float time)
+
+// Potential/force functions
+float Bump_Potential(float x, float time)
 {
     /* Potential function for a confined bump over place in the middle of a well
-    modelled as a cos^2 - 1 function for a smooth transition to the flat well
+    modelled as a abs(cos(X) - 1) function for a smooth transition to the flat well
     then off set by a cos(omega t) to oscillate the bump up and down
-    PE = A(cos^2(pi/l * x)-1)*cos(omega*t) */
-
+    PE = A/2|(cos(pi/l * x)-1)|*cos(omega*t) */
+    // THIS POTENTIAL IS SYMMETRIC, CAN USE PERIODIC BOUNDARY CONDS
     // check if over bump
     if (x > bumpPos && x < bumpPos + bumpLength)
     {
         std::cout<<"Over bump ";
-        return KelEConv(bumpAmp)*(pow(std::cos((M_PI/bumpLength)*(x-bumpPos)),2)-1)*std::cos(bumpOmega*time);
+        return Kel_E_Conv(bumpAmp)*std::abs(std::cos((M_PI/bumpLength)*(x-bumpPos))-1)*std::cos(bumpOmega*time);
     }
     else
     {
         return 0;
     }
 }
+float Pendulum_Force(float x)
+{
+    /*
+    Models the force experienced in a PE = 1/2kx^2 potential
+    F = -kx
+    Offset by half the length of the well so its centered
+    */
+   return -1*springK*(x-(wellLength*0.5));
+}
+float Pendulum_Potential(float x)
+{
+    /*
+    Potential ver of Pendulum_Force
+    In case I need it, will be removed if obselete in final ver
+    */
+   return 0.5*springK*pow(x-(wellLength*0.5),2);
+}
+
 
 // MAIN
 int main()
 {
+    // define i=0 positions from initials
     float time = 0;
     float x = x_0;
     float v = v_0;
     int i = 1; // inital velocity is to the right
-    float KE = KEConv(v_0); // init KE [j]
-    float ET = KE + BumpPotential(x,time); //[J] Get E_total at x_0 and time=0
+    float KE = KE_Conv(v_0); // init KE [j]
+    float ET = KE + Bump_Potential(x,time); //[J] Get E_total at x_0 and time=0
 
+    /*
     //open file write our initials 
     std::ofstream result;
     result.open("results.dat");
+
     result<<time<<','<<KE<<'\n';
 
     while(time < stopTime)
@@ -89,8 +120,8 @@ int main()
             x = 2*wellLength - x;
             i = -1; // vel to the left
         } 
-        KE = ET - BumpPotential(x,time);
-        v = velConv(KE)*i;
+        KE = ET - Bump_Potential(x,time);
+        v = Vel_Conv(KE)*i;
         // work out new KE and export result
         
         result<<time<<','<<KE<<'\n';
@@ -101,6 +132,7 @@ int main()
     };
 
     result.close();
+    */
     std::cout<<"EXECUTE SUCESSFUL";
     return 0;
 }
