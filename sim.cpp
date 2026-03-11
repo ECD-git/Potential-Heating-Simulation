@@ -3,8 +3,9 @@
 #include<vector>
 #include<fstream>
 
+// Real world consts
 float M = 1.00784*1.66*pow(10,-27); //[kg] //using atomic mass of H
-
+float K_B = 1.380649*pow(10, -23); //boltzmann const
 // USEFUL FUNCTIONS
 float KE_Conv(float v)
 {
@@ -24,35 +25,36 @@ float eV_Conv(float KE)
 float Kel_E_Conv(float K)
 {
     // converts a temperature [K] to an energy [J]
-    return 1.380649*pow(10, -23)*K;
+    return K_B*K;
 }
 float E_Kel_Conv(float E)
 {
-    return E/(1.380649*pow(10, -23));
+    return E/(K_B);
 }
+
+// time step and sim length
+float timeStep = 0.0001; //[s]
+float stopTime = 1; //[s] //Overall Length of sim (will be rounded if not divisible)
+int N_t = std::round(stopTime/timeStep); // number of time steps
+// Particle definitions and initials
+float K_i = 0.000; // kelvin
+float v_0 = Vel_Conv(Kel_E_Conv(K_i)); //[m/s] // 4ms corresponds to about 1 milikelvin
+float x_0 = -0.25; //[m] //particle starts at far left side 
 
 // well definitions (rough area the particle is confined to)
 float wellLength = -0.25; //[m]
 float wellDepth = 0.5; // [kelvin]
-
-// Particle definitions and initials
-float K_i = 0.000; // kelvin
-float v_0 = Vel_Conv(Kel_E_Conv(K_i)); //[m/s] // 4ms corresponds to about 1 milikelvin
-float x_0 = wellLength; //[m] //particle starts at far left side 
-
 // bump consts
 float bumpAmp = 0.0005; // [kelvin]
 float bumpLength = 0.05; //[m]
 float bumpPos = (wellLength/2) - (bumpLength/2); //[m] //places bump in middle
 float bumpOmega = 0.5*(M_PI*v_0/wellLength); // [rad/s] //driving frequency of potential 'bump'
 float bumpPhase = M_PI; //[rads]
+
 // Spring Potential Consts
 float springPEMax = 0.0005; // Kelvin, this is the max value of the potential in the well
-float springK = 2*Kel_E_Conv(springPEMax)/pow(wellLength/2,2); // [N/m]  
-// time step and sim length
-float timeStep = 0.0001; //[s]
-float stopTime = 1; //[s] //Overall Length of sim (will be rounded if not divisible)
-int N_t = std::round(stopTime/timeStep); // number of time steps
+float springK = 2*Kel_E_Conv(springPEMax)/pow(x_0/2,2); // [N/m]  
+
 // vectors for storing positions and velocity
 /* storing in the form (a,v,x):
 calc each step in order v -> x -> a
@@ -142,8 +144,6 @@ int main()
 
     // push back resulting ke and time from this step
     result<<i*timeStep<<','<<E_Kel_Conv(KE_Conv(V[i]))<<'\n';
-    
-    
     }
 
     result.close();
