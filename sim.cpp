@@ -34,7 +34,7 @@ float E_Kel_Conv(float E)
 
 // time step and sim length
 float timeStep = 0.0001; //[s]
-float stopTime = 1; //[s] //Overall Length of sim (will be rounded if not divisible)
+float stopTime = 0.2; //[s] //Overall Length of sim (will be rounded if not divisible)
 int N_t = std::round(stopTime/timeStep); // number of time steps
 // Particle definitions and initials
 float K_i = 0.001; // kelvin
@@ -46,7 +46,7 @@ float springPEMax = 0.0005; // Kelvin, this is the max value of the potential in
 float springK = 2*Kel_E_Conv(springPEMax)/pow(x_0/2,2); // [N/m]  
 
 // Standing wave values
-float standingPEMax = 0.0005; // Kelvin
+float standingPEMax = 0.0001; // Kelvin
 float lambda = 500 * pow(10,-9); // [m] typical light wavelength
 float tau_On = 0.001; // [s] tuned so we get about 10 time steps with the force on
 float k = M_PI/(tau_On*v_0);
@@ -84,7 +84,7 @@ float Standing_Force(float x, bool on)
     // force of standing wave implementing force on particle, tuned to A_0
     if (on == 1)
     {
-        return Kel_E_Conv(standingPEMax) * k; //* std::sin(2*k*x);
+        return Kel_E_Conv(standingPEMax) *k* std::sin(2*k*x);
     }
     else
     {
@@ -125,7 +125,7 @@ int main()
     }
     else
     {
-        cooldown = tau_On;
+        cooldown = tau_On; // TAU OFF
     }
     X.push_back(x_0);
     V.push_back(v_0);
@@ -148,18 +148,17 @@ int main()
         if(PE_on==1)
         {
             PE_on = false;
-            cooldown = tau_On; // GET RANDOM TAU OFF HERE
+            cooldown = tau_On/2; // GET RANDOM TAU OFF HERE
             walk<<i*timeStep<<','<<V[i]*M<<'\n';
         }
         else 
         {
             PE_on = true;
-            cooldown = tau_On;
+            cooldown = tau_On/2; // TAU OFF
         }
     }
-    float a_i = Standing_Force(X[0], PE_on)/M;
-    //std::cout<<a_i<<','<<PE_on<<std::endl;
-    std::cout<<k<<std::endl;
+    float a_i = Standing_Force(X[i], PE_on)/M;
+    //std::cout<<a_i<<','<<PE_on<<std::endl; // Debug purposes
     A.push_back(a_i);
     cooldown -= timeStep;
 
