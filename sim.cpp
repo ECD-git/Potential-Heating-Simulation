@@ -34,7 +34,7 @@ float E_Kel_Conv(float E)
 
 // time step and sim length
 float timeStep = 0.0001; //[s]
-float stopTime = 0.2; //[s] //Overall Length of sim (will be rounded if not divisible)
+float stopTime = 0.1; //[s] //Overall Length of sim (will be rounded if not divisible)
 int N_t = std::round(stopTime/timeStep); // number of time steps
 // Particle definitions and initials
 float K_i = 0.001; // kelvin
@@ -158,7 +158,7 @@ int main()
         }
     }
     float a_i = Standing_Force(X[i], PE_on)/M;
-    //std::cout<<a_i<<','<<PE_on<<std::endl; // Debug purposes
+    std::cout<<a_i<<','<<v_i<<','<<PE_on<<std::endl; // Debug purposes
     A.push_back(a_i);
     cooldown -= timeStep;
 
