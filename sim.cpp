@@ -37,23 +37,20 @@ float timeStep = 0.0001; //[s]
 float stopTime = 1; //[s] //Overall Length of sim (will be rounded if not divisible)
 int N_t = std::round(stopTime/timeStep); // number of time steps
 // Particle definitions and initials
-float K_i = 0.000; // kelvin
+float K_i = 0.001; // kelvin
 float v_0 = Vel_Conv(Kel_E_Conv(K_i)); //[m/s] // 4ms corresponds to about 1 milikelvin
-float x_0 = -0.25; //[m] //particle starts at far left side 
-
-// well definitions (rough area the particle is confined to)
-float wellLength = -0.25; //[m]
-float wellDepth = 0.5; // [kelvin]
-// bump consts
-float bumpAmp = 0.0005; // [kelvin]
-float bumpLength = 0.05; //[m]
-float bumpPos = (wellLength/2) - (bumpLength/2); //[m] //places bump in middle
-float bumpOmega = 0.5*(M_PI*v_0/wellLength); // [rad/s] //driving frequency of potential 'bump'
-float bumpPhase = M_PI; //[rads]
+float x_0 = 0; //[m] //particle starts at far left side 
 
 // Spring Potential Consts
 float springPEMax = 0.0005; // Kelvin, this is the max value of the potential in the well
 float springK = 2*Kel_E_Conv(springPEMax)/pow(x_0/2,2); // [N/m]  
+
+// Standing wave values
+float A_0 = 0.0005; // kelvin, AMPLITUDE of FORCE
+float lambda = 500 * pow(10,-9); // typical light wavelength
+float tau_On = 0.001; // tuned so we get about 10 time steps with the force on
+float k = M_PI/(k*v_0);
+// make tau_Off some random variable in the scale tau_On;
 
 // vectors for storing positions and velocity
 /* storing in the form (a,v,x):
@@ -64,40 +61,6 @@ std::vector<float> X;
 std::vector<float> V;
 std::vector<float> A;
 
-// Potential/force functions
-float Bump_Potential(float x, float time)
-{
-    /* Potential function for a confined bump over place in the middle of a well
-    modelled as a abs(cos(X) - 1) function for a smooth transition to the flat well
-    then off set by a cos(omega t) to oscillate the bump up and down
-    PE = A/2(cos(pi/l * x)-1)*cos(omega*t) */
-    // THIS POTENTIAL IS SYMMETRIC, CAN USE PERIODIC BOUNDARY CONDS
-    // check if over bump
-    if (x > bumpPos && x < bumpPos + bumpLength)
-    {
-        std::cout<<"Over bump ";
-        return Kel_E_Conv(bumpAmp)*0.5*(std::cos((M_PI/bumpLength)*(x-bumpPos))-1)*std::cos(bumpOmega*time + bumpPhase);
-    }
-    else
-    {
-        return 0;
-    }
-}
-float Bump_Force(float x, float time)
-{
-    /*
-    Force version of the bump potential, just the derivative F = -dU/dx
-    */
-    if (x > bumpPos && x < bumpPos + bumpLength)
-    {
-        std::cout<<"Over bump ";
-        return Kel_E_Conv(bumpAmp)*(M_PI/bumpLength)*0.5*std::sin((M_PI/bumpLength)*(x-bumpPos))*std::cos(bumpOmega*time + bumpPhase);
-    }
-    else
-    {
-        return 0;
-    }
-}
 float Pendulum_Force(float x)
 {
     /*
@@ -116,6 +79,19 @@ float Pendulum_Potential(float x)
     */
    return 0.5*springK*pow(x,2);
 }
+float Standing_Force(float x)
+{
+    // force of standing wave implementing force on particle, tuned to A_0
+    return A_0 * std::sin(2*k*x);
+}
+float Standing_Potential(float x)
+{
+    // potential of a standing wave implementing a force on our particle
+    return (A_0/k) * std::sin(2*k*x);
+}
+
+// function to grab the potential at any time t or position x
+// TODO design this for the turning off / on of a standing wave
 
 // MAIN
 int main()
