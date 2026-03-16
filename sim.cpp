@@ -32,8 +32,20 @@ float E_Kel_Conv(float E)
     return E/(K_B);
 }
 
+std::vector<float> LogSpace(int start, int stop, int step)
+{
+    // generates a log space of values between index start and stop 
+    // and seperated by intex 10^step, in integer steps
+    std::vector<float> result;
+    for(int i = 0; start + i <= stop; i+=step)
+    {
+        result.push_back(pow(10, start + i));
+    }
+    return result;
+}
+
 // Particle definitions and initials
-float K_i = 0.001; // kelvin
+float K_i = 0; // kelvin
 float v_0 = Vel_Conv(Kel_E_Conv(K_i)); //[m/s] // 4ms corresponds to about 1 milikelvin
 float x_0 = -0.25; //[m] //particle starts at far left side 
 
@@ -73,8 +85,8 @@ float Pendulum_Potential(float x)
 }
 
 // time step and sim length
-std::vector<float> timeSteps{{1, 0.0001,0.001}}; //[s]
-float N = 100; // number of oscillations. (roughly, time is rounded to nearest num of steps)
+std::vector<float> timeSteps = LogSpace(-3, 3, 1); //[s]
+float N = 1000; // number of oscillations. (roughly, time is rounded to nearest num of steps)
 
 float stopTime = N * pow(M/springK, 0.5) * 2 * M_PI; //[s] 
 

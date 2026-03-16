@@ -10,14 +10,14 @@ def ReadFile(name):
 # PLOT RESULTS
 data = ReadFile(os.getcwd() + "/results.dat")
 
-
 Fig, axs = pplot.subplots(1)
-Fig.set_size_inches((10,7))
-Fig.suptitle("$F=-kx$ potential, $K_i = 0k$, $x_i = -0.25m$, $A_0 = 0.0005K$")
+Fig.set_size_inches((10,4))
+Fig.suptitle('\n'+"$F=-kx$ potential, $K_i = 0k$, $x_i = -0.25m$, $A_0 = 0.0005K$")
 
-axs.plot(data[:,0], data[:,1])
+axs.scatter(data[:,0], data[:,1], )
+axs.set_xscale('log');
 axs.set(ylabel="Particle KE [k]")
-axs.set_title("Particle Kinetic Energy")
-axs.set(xlabel="Time [s]", ylabel="$\Delta$p [kgm$^{-1}$]")
+axs.set_title("Total Energy against Time Step, logspace, after 1000 oscillations", pad=20)
+axs.set(xlabel="$\Delta$t [s]", ylabel="Total Energy [kelvin]")
 
 pplot.show()
